@@ -1,0 +1,68 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+   url      = env("DATABASE_URL")
+
+}
+
+enum StatusAula {
+  ATIVA
+  DISPONIVEL
+  REPOSTA
+  CANCELADA
+}
+
+enum StatusSolicitacao {
+  PENDENTE
+  ACEITA
+  RECUSADA
+}
+
+model Professor {
+  id                    Int                     @id @default(autoincrement())
+  nome                  String
+  email                 String                  @unique
+  senha                 String
+  formularioReposicao   Boolean                 @default(false)
+  aulas                 Aula[]                  @relation("AulasDoProfessor")
+  solicitacoesEnviadas  SolicitacaoReposicao[]  @relation("SolicitacoesOriginais")
+  solicitacoesRecebidas SolicitacaoReposicao[]  @relation("SolicitacoesInteressados")
+  criadoEm              DateTime                @default(now())
+}
+
+model Aula {
+  id            Int                     @id @default(autoincrement())
+  data          DateTime
+  horario       String
+  status        StatusAula              @default(ATIVA)
+  observacao    String?
+  professor     Professor               @relation("AulasDoProfessor", fields: [professorId], references: [id])
+  professorId   Int
+  solicitacoes  SolicitacaoReposicao[]
+  criadoEm      DateTime                @default(now())
+}
+
+model SolicitacaoReposicao {
+  id                      Int                   @id @default(autoincrement())
+  aula                    Aula                  @relation(fields: [aulaId], references: [id])
+  aulaId                  Int
+  professorOriginal        Professor             @relation("SolicitacoesOriginais", fields: [professorOriginalId], references: [id])
+  professorOriginalId      Int
+  professorInteressado     Professor?            @relation("SolicitacoesInteressados", fields: [professorInteressadoId], references: [id])
+  professorInteressadoId   Int?
+  status                   StatusSolicitacao     @default(PENDENTE)
+  dataSolicitacao          DateTime              @default(now())
+}
+
+
+
