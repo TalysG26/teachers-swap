@@ -1,17 +1,42 @@
-
-//chatgpt mesmo 
 import * as dotenv from "dotenv";
 import path from "path";
+import { PrismaClient } from "@/app/generated/prisma/client";
 
-// 🗂️ Carrega o .env da raiz do projeto
+
 dotenv.config({ path: path.resolve(process.cwd(), ".env") });
 
-
-import { PrismaClient, StatusAula, StatusSolicitacao } from "@/app/generated/prisma/client";
 const prisma = new PrismaClient();
 
 async function main() {
-  // Eu
+  console.log("Iniciando a poha do seed");
+
+  
+  const statusAula = await prisma.statusAulaDB.createMany({
+    data: [
+      { nome: "ATIVA" },
+      { nome: "DISPONIVEL" },
+      { nome: "REPOSTA" },
+      { nome: "CANCELADA" },
+    ],
+    skipDuplicates: true,
+  });
+
+  
+  const statusSolicitacao = await prisma.statusSolicitacaoDB.createMany({
+    data: [
+      { nome: "PENDENTE" },
+      { nome: "ACEITA" },
+      { nome: "RECUSADA" },
+    ],
+    skipDuplicates: true,
+  });
+
+  
+  const statusAtiva = await prisma.statusAulaDB.findFirst({ where: { nome: "ATIVA" } });
+  const statusDisponivel = await prisma.statusAulaDB.findFirst({ where: { nome: "DISPONIVEL" } });
+  const statusPendente = await prisma.statusSolicitacaoDB.findFirst({ where: { nome: "PENDENTE" } });
+
+  
   const prof1 = await prisma.professor.create({
     data: {
       nome: "David Lima",
@@ -23,19 +48,19 @@ async function main() {
 
   const prof2 = await prisma.professor.create({
     data: {
-    nome: "Thiago Silva" ,
-      email: "thiago.Silva@ifal.edu.br",
+      nome: "Thiago Silva",
+      email: "thiago.silva@ifal.edu.br",
       senha: "232442",
       formularioReposicao: false,
     },
   });
 
-  
+
   const aula1 = await prisma.aula.create({
     data: {
       data: new Date("2025-10-25"),
       horario: "9:00 - 11:50",
-      status: StatusAula.ATIVA,
+      statusId: statusAtiva!.id,
       professorId: prof1.id,
     },
   });
@@ -44,7 +69,7 @@ async function main() {
     data: {
       data: new Date("2025-10-05"),
       horario: "12:00 - 14:00",
-      status: StatusAula.DISPONIVEL,
+      statusId: statusDisponivel!.id,
       professorId: prof2.id,
     },
   });
@@ -55,7 +80,7 @@ async function main() {
       aulaId: aula1.id,
       professorOriginalId: prof1.id,
       professorInteressadoId: prof2.id,
-      status: StatusSolicitacao.PENDENTE,
+      statusId: statusPendente!.id,
     },
   });
 
@@ -63,18 +88,19 @@ async function main() {
     data: {
       aulaId: aula2.id,
       professorOriginalId: prof2.id,
-      status: StatusSolicitacao.PENDENTE,
+      statusId: statusPendente!.id,
     },
   });
 
-  console.log("Essa poha está funcionando, então não mexe!");
+  console.log("essa poha está funcionado, não mexe!");
 }
 
 main()
   .catch((e) => {
-    console.error(e);
+    console.error("fudeu deu erro:", e);
     process.exit(1);
   })
   .finally(async () => {
     await prisma.$disconnect();
+    console.log("Conexão encerrada.");
   });
