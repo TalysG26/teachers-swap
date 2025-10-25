@@ -39,6 +39,7 @@ async function main() {
   
   const prof1 = await prisma.professor.create({
     data: {
+      id: 1,
       nome: "David Lima",
       email: "dhs.lima@ifal.edu.br",
       senha: "123456",
