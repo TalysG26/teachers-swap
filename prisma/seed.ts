@@ -8,7 +8,7 @@ dotenv.config({ path: path.resolve(process.cwd(), ".env") });
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log("Iniciando a poha do seed");
+  console.log("Iniciando o seed");
 
   
   const statusAula = await prisma.statusAulaDB.createMany({
